@@ -1,0 +1,32 @@
+/* DOM size and boundary */
+html,
+body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* allow user to see game box */
+
+#gameCellContainer {
+    position: absolute;
+    display: block;
+    height: 300px;
+    width: 300px;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+    border: 1px solid black;
+}
+
+.gameCell {
+    position: relative;
+    display: inline-block;
+    height: 98px;
+    width: 98px;
+    border: 1px solid black;
+    float: left;
+}
