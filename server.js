@@ -15,6 +15,49 @@ const cors = require('cors');
 const os = require('os');
 // import library that gets server's IPv4 address
 const localIpV4Address = require("local-ipv4-address");
+// possbilities that will win the game
+const winCondition = [
+	[
+		1, 1, 1, 
+		0, 0, 0, 
+		0, 0, 0
+	],
+	[
+		0, 0, 0, 
+		1, 1, 1, 
+		0, 0, 0
+	],
+	[
+		0, 0, 0, 
+		0, 0, 0,
+		1, 1, 1, 
+	],
+	[
+		1, 0, 0, 
+		1, 0, 0, 
+		1, 0, 0
+	],
+	[
+		0, 1, 0, 
+		0, 1, 0, 
+		0, 1, 0
+	],
+	[
+		0, 0, 1, 
+		0, 0, 1, 
+		0, 0, 1
+	],
+	[
+		1, 0, 0, 
+		0, 1, 0, 
+		0, 0, 1
+	],
+	[
+		0, 0, 1, 
+		0, 1, 0, 
+		1, 0, 0
+	]
+];
 
 // allow Cross Origin Requests
 app.use(cors());
@@ -49,37 +92,38 @@ app.post('/sendMessage', function (req, res) {
 	let userMessage = JSON.stringify(req.body.message);
 	// display user's message in the server console
 	console.log("***** User: " + userMessage);
-
 });
 
 // get number of players on server
 let players = 0;
 io.on('connection', function (socket) {
 	players++;
-	// number of players allowed
-	if (players === 2) {
-		io.sockets.emit('broadcast', {
-			description: players + ' players connected!'
-		});
-		// decrement user count
-		socket.on('disconnect', function () {
-			players--;
-			// clear board
-			if (players < 2) {
-				io.sockets.emit('broadcast', {
-					description: players + ' players connected!'
-				});
-			}
-		});
-		socket.on('msg', function (data) {
-			console.log(data);
-			//Send message to everyone
-			io.sockets.emit('broadcast', data);
-		});
-	}
-});
 
-//io.broadcast.emit('broadcast', 'hello friends!');
+	// decrement user count
+	socket.on('disconnect', function () {
+		players--;
+	});
+
+	console.log(players);
+
+	// automatically send the player count on user connection if user already connected
+	io.sockets.emit('getPlayerCount', {
+		playerCount: players
+	});
+
+	// get player count on request
+	socket.on('getPlayerCount', function () {
+		io.sockets.emit('getPlayerCount', {
+			playerCount: players
+		});
+	});
+	
+	socket.on('msg', function (data) {
+		console.log(data);
+		//Send message to everyone
+		io.sockets.emit('broadcast', data);
+	});
+});
 
 
 // create server & listen for connections
