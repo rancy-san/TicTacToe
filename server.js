@@ -333,7 +333,8 @@ io.on('connection', function (socket) {
 			console.log("DRAW GAME");
 			playerList[playerMatch[player1UserID].userName].draw++;
 			playerList[playerMatch[player2UserID].userName].draw++;
-			gameStatus("draw", null);
+			gameStatus("draw", player1UserID);
+			gameStatus("draw", player2UserID);
 		}
 	});
 });
