@@ -5,14 +5,35 @@ body {
     width: 100%;
     margin: 0;
     padding: 0;
+    user-select: none;
+}
+
+/* score */
+#playerScoreWrapper {
+    position: absolute;
+    display: block;
+    height: 300px;
+    width: 300px;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+    left: -650px;
+    font-size: 25px;
+    text-align: center;
+}
+
+#playerScoreContainer {
+    border-top: 1px solid black;
 }
 
 /* player */
 #playerNameContainer {
     position: absolute;
     display: block;
-    height: 300px;
-    width: 300px;
+    height: 302px;
+    width: 302px;
     top: 0;
     bottom: 0;
     left: 0;
@@ -20,6 +41,25 @@ body {
     margin: auto;
     background-color: #EEE;
     z-index: 2;
+}
+
+#gameStatusContainer {
+    position: absolute;
+    display: block;
+    height: 300px;
+    width: 300px;
+    font-size: 25px;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+    right: -650px;
+    text-align: center;
+}
+
+#gameStatusRetryButton {
+    background-color: #F3F3F3;
 }
 
 #playerNameInput {

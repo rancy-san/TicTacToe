@@ -24,43 +24,43 @@ let playerList = {
 // possbilities that will win the game
 const winCondition = [
 	[
-		1, 1, 1, 
-		0, 0, 0, 
-		0, 0, 0
-	],
-	[
-		0, 0, 0, 
-		1, 1, 1, 
-		0, 0, 0
-	],
-	[
-		0, 0, 0, 
+		1, 1, 1,
 		0, 0, 0,
-		1, 1, 1, 
+		0, 0, 0
 	],
 	[
-		1, 0, 0, 
-		1, 0, 0, 
+		0, 0, 0,
+		1, 1, 1,
+		0, 0, 0
+	],
+	[
+		0, 0, 0,
+		0, 0, 0,
+		1, 1, 1,
+	],
+	[
+		1, 0, 0,
+		1, 0, 0,
 		1, 0, 0
 	],
 	[
-		0, 1, 0, 
-		0, 1, 0, 
+		0, 1, 0,
+		0, 1, 0,
 		0, 1, 0
 	],
 	[
-		0, 0, 1, 
-		0, 0, 1, 
+		0, 0, 1,
+		0, 0, 1,
 		0, 0, 1
 	],
 	[
-		1, 0, 0, 
-		0, 1, 0, 
+		1, 0, 0,
+		0, 1, 0,
 		0, 0, 1
 	],
 	[
-		0, 0, 1, 
-		0, 1, 0, 
+		0, 0, 1,
+		0, 1, 0,
 		1, 0, 0
 	]
 ];
@@ -82,9 +82,15 @@ let player1Game = defaultGame();
 // initial starting board for player 2
 let player2Game = defaultGame();
 
+
 // userID tracking
-let player1Name;
-let player2Name;
+let playerMatch = {
+
+};
+
+// userID tracking
+let player1UserID;
+let player2UserID;
 
 // to optimize logic callback until minimumWinningMoves reached
 let messageCount = 0;
@@ -146,8 +152,8 @@ io.on('connection', function (socket) {
 		});
 
 		// reset server side game
-		if(players < maxPlayers) {
-			player1Name = player2Name;
+		if (players < maxPlayers) {
+			player1UserID = player2UserID;
 			player1Game = defaultGame();
 			player2Game = defaultGame();
 			messageCount = 0;
@@ -156,10 +162,10 @@ io.on('connection', function (socket) {
 	console.log("Player count: " + players);
 
 	// set player names when number of players are valid
-	if(players === 1) {
-		player1Name = socket.id;
-	} else if(players === maxPlayers) {
-		player2Name = socket.id;
+	if (players === minPlayers) {
+		player1UserID = socket.id;
+	} else if (players === maxPlayers) {
+		player2UserID = socket.id;
 	}
 
 	// get player count on request
@@ -168,26 +174,65 @@ io.on('connection', function (socket) {
 			playerCount: players
 		});
 	});
-	
+
+	// check if the user already exists on submission of player name
+	socket.on('userData', function (data) {
+		console.log("Adding user data...");
+		let tempUserName = data.userName;
+		if(!playerList.hasOwnProperty(tempUserName)) {
+			playerList[tempUserName] = {
+				wins: 0,
+				loss: 0,
+				draw: 0
+			};
+		}
+
+		console.log("client ID: " + data.userID);
+		console.log("server ID: " + player1UserID);
+
+		if(data.userID === player1UserID && !playerMatch.hasOwnProperty(player1UserID)) {
+			console.log("Assigning ID to player 1");
+			playerMatch[player1UserID] = {
+				userName: tempUserName
+			};
+		}
+
+		if(data.userID === player2UserID && !playerMatch.hasOwnProperty(player2UserID)) {
+			console.log("Assigning ID to player 2");
+			playerMatch[player2UserID] = {
+				userName: tempUserName
+			};
+		}
+
+		console.log(playerMatch)
+		console.log(playerList);
+	});
+
+	socket.on('getUserScore', function () {
+		console.log("Sending player score...");
+		playerScoreStatus();
+	});
+
 	// intercept user sending message to server
 	socket.on('msg', function (data) {
+		// go up to max messages allowed for the game
 		messageCount++;
 		console.log(data);
 		/*
-		console.log(player1Name);
-		console.log(player2Name);
+		console.log(player1UserID);
+		console.log(player2UserID);
 		*/
 
 		//Send message to everyone
 		io.sockets.emit('broadcast', data);
 		// add marked position to personal game board
-		switch(data.user) {
-			case player1Name: {
+		switch (data.user) {
+			case player1UserID: {
 				// mark player1's board with index of TRUE position
 				player1Game[data.cell] = 1;
 				break;
 			}
-			case player2Name: {
+			case player2UserID: {
 				// mark player2's board with index of TRUE position
 				player2Game[data.cell] = 1;
 				break;
@@ -197,7 +242,7 @@ io.on('connection', function (socket) {
 		console.log(player2Game);
 
 		// check if winning state
-		if(messageCount >= minimumWinningMoves) {
+		if (messageCount >= minimumWinningMoves) {
 			// used to loop through player's board
 			let defaultGameLength = defaultGame().length;
 			// used to loop through possible winning boards
@@ -218,16 +263,21 @@ io.on('connection', function (socket) {
 					console.log("Winner: " + winner);
 					// assign and send winners and losers
 					switch (winner) {
-						case player1Name: {
-							gameStatus("win", player1Name);
-							gameStatus("lose", player2Name);
+						case player1UserID: {
+							playerList[playerMatch[player1UserID].userName].wins++;
+							playerList[playerMatch[player2UserID].userName].loss++;
+							gameStatus("win", player1UserID);
+							gameStatus("lose", player2UserID);
 							break;
 						}
-						case player2Name: {
-							gameStatus("lose", player1Name);
-							gameStatus("win", player2Name);
+						case player2UserID: {
+							playerList[playerMatch[player1UserID].userName].loss++;
+							playerList[playerMatch[player2UserID].userName].wins++;
+							gameStatus("lose", player1UserID);
+							gameStatus("win", player2UserID);
 						}
 					}
+
 					// reset board for next play
 					messageCount = 0;
 					player1Game = defaultGame();
@@ -241,24 +291,24 @@ io.on('connection', function (socket) {
 
 						// check if table of winning combinations is valid
 						if ((player1Game[j] === winCondition[i][j]) && (player1Game[j] == winningValue)) {
-							console.log("player1Game["+j+"]: " + player1Game[j] + "winCondition["+i+"]["+j+"]: " + winCondition[i][j]);
+							console.log("player1Game[" + j + "]: " + player1Game[j] + "winCondition[" + i + "][" + j + "]: " + winCondition[i][j]);
 							winPatternCountPlayer1++;
 						}
 						// check if table of winning combinations is valid
 						if ((player2Game[j] === winCondition[i][j]) && (player2Game[j] == winningValue)) {
-							console.log("player2Game["+j+"]: " + player2Game[j] + "winCondition["+i+"]["+j+"]: " + winCondition[i][j]);
+							console.log("player2Game[" + j + "]: " + player2Game[j] + "winCondition[" + i + "][" + j + "]: " + winCondition[i][j]);
 							winPatternCountPlayer2++;
 						}
 						// player won
 						if (winPatternCountPlayer1 === winPatternMax) {
 							console.log("P1 WINS");
-							winner = player1Name;
+							winner = player1UserID;
 							break;
 						}
 						// player won
 						if (winPatternCountPlayer2 === winPatternMax) {
 							console.log("P2 WINS");
-							winner = player2Name;
+							winner = player2UserID;
 							break;
 						}
 						// no winners yet
@@ -272,13 +322,23 @@ io.on('connection', function (socket) {
 				}
 			}
 		}
-		
+		console.log(messageCount);
 		// check if draw game
 		if (messageCount >= maximumDrawMoves) {
+			console.log("DRAW GAME");
+			playerList[playerMatch[player1UserID].userName].draw++;
+			playerList[playerMatch[player2UserID].userName].draw++;
 			gameStatus("draw", null);
 		}
 	});
 });
+
+function playerScoreStatus() {
+	console.log("Sending player score...");
+	io.sockets.emit('getUserScore', {
+		playerList: playerList
+	});
+}
 
 /*
 	Send game status to the winner and loser given 
@@ -290,6 +350,9 @@ function gameStatus(someGameStatus, somePlayerName) {
 		gameStatus: someGameStatus,
 		player: somePlayerName,
 	});
+
+	// send updated player score to players
+	playerScoreStatus();
 }
 
 

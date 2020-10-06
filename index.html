@@ -3,18 +3,25 @@
 
 <head>
     <title>Tic Tac Toe</title>
-    <link rel="stylesheet" href="./assets/css/index.css">
+    <link rel="stylesheet" href="./assets/css/index.css?v=1.09">
 </head>
 
 <body>
-    <!--
     <div id="playerNameContainer">
        <input id="playerNameInput" contenteditable="true" placeholder="Your Name">
        <div id="playerNameButton">Submit</div>
     </div>
--->
     
-    <div id="playerScoreContainer"></div>
+    <div id="playerScoreWrapper">
+        List of Scores
+
+        <div id="playerScoreContainer"></div>
+    </div>
+
+    <div id="gameStatusContainer">
+        <div id="gameStatusText">Did you win?</div>
+        <div id="gameStatusRetryButton">Play Again</div>
+    </div>
 
     <div id="gameStartMessage">Waiting for 1 more player...</div>
     <!-- Box that holds all the selectable cells -->
@@ -38,7 +45,7 @@
 </body>
 <footer>
     <script type = "text/javascript" src = "./assets/js/socket.io.js"></script>
-    <script type="text/javascript" src="./assets/js/index.js?v=1.07"></script>
+    <script type="text/javascript" src="./assets/js/index.js?v=1.33"></script>
 </footer>
 
 </html>

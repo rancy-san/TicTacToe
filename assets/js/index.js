@@ -2,16 +2,19 @@ var connectionIP = "localhost";
 var connectionPort = "3000";
 var xhr = new XMLHttpRequest();
 var socket = io.connect(connectionIP + ":" + connectionPort);
-var player = "someUser";
+var playerName = "someUser";
 var playerID;
 /* load and assignment DOM elements */
 function loadGame() {
+    var DOM = document.body;
+    DOM.style.display = "none";
     // get cells
     var gameCell = document.getElementsByClassName("gameCell");
     // get length to iterate cells
     var gameCellLength = gameCell.length;
     socket.on('connect', function () {
         playerID = socket.id;
+        DOM.style.display = "block";
     });
     // add event to each cell
     while (gameCellLength--) {
@@ -28,13 +31,42 @@ function loadGame() {
             });
         })(gameCellLength);
     }
+    // listen for user score
+    socket.on('getUserScore', function (data) {
+        // get player list
+        var playerList = data.playerList;
+        // get keys from JSON list
+        var playerKeys = Object.keys(playerList);
+        // get length of JSON list
+        var playerListLength = playerKeys.length;
+        // store the element that will display the player list & score
+        var playerScoreContainer = document.getElementById("playerScoreContainer");
+        // reset player list
+        playerScoreContainer.innerHTML = "";
+        console.log(playerKeys);
+        // get player list
+        while (playerListLength--) {
+            // create elements to store list
+            var playerListName = document.createElement("DIV");
+            var playerListScore = document.createElement("DIV");
+            playerListName.innerText = playerKeys[playerListLength];
+            playerListScore.innerText = JSON.stringify(playerList[playerKeys[playerListLength]]);
+            playerListScore.style.fontSize = "15px";
+            playerScoreContainer.appendChild(playerListName);
+            playerScoreContainer.appendChild(playerListScore);
+        }
+    });
 }
 /*
     Send message tot he server contents containing the message (X or O),
     the cell that the content is in, and the user.
 */
 function sendMessage(msg, cellIndex) {
-    socket.emit('msg', { message: msg, cell: cellIndex, user: socket.id });
+    socket.emit('msg', {
+        message: msg,
+        cell: cellIndex,
+        user: socket.id
+    });
 }
 function getPlayerCount() {
     socket.emit('getPlayerCount');
@@ -90,8 +122,29 @@ function resetGame() {
         gameCell[gameCellLength].style.cursor = "default";
     }
 }
+function addEventCaptureUserNameInput() {
+    // input and button container
+    var playerNameContainer = document.getElementById("playerNameContainer");
+    // input element
+    var playerNameInput = document.querySelector("#playerNameInput");
+    // button to send username information
+    var playerNameButton = document.getElementById("playerNameButton");
+    // submit typed player name
+    playerNameButton.addEventListener("mousedown", function () {
+        playerNameContainer.style.display = "none";
+        playerName = playerNameInput.value;
+        socket.emit('userData', {
+            userName: playerName,
+            userID: playerID
+        });
+        socket.emit('getUserScore', function (data) {
+            console.log(data);
+        });
+    });
+}
 // wait for DOM to load before getting elements
 window.onload = function () {
+    addEventCaptureUserNameInput();
     loadGame();
     updateGame();
     getPlayerCount();

@@ -1,19 +1,23 @@
 let connectionIP = "localhost";
 let connectionPort = "3000";
 let xhr = new XMLHttpRequest();
-var socket = io.connect(connectionIP+":"+connectionPort);
-let player = "someUser";
+var socket = io.connect(connectionIP + ":" + connectionPort);
+let playerName = "someUser";
 let playerID;
 
 /* load and assignment DOM elements */
 function loadGame() {
+    let DOM:HTMLElement = document.body;
+    DOM.style.display = "none";
+
     // get cells
     let gameCell: HTMLCollection = document.getElementsByClassName("gameCell");
     // get length to iterate cells
-    let gameCellLength:number = gameCell.length;
+    let gameCellLength: number = gameCell.length;
 
     socket.on('connect', () => {
         playerID = socket.id;
+        DOM.style.display = "block";
     });
 
     // add event to each cell
@@ -31,6 +35,39 @@ function loadGame() {
             });
         })(gameCellLength);
     }
+
+    // listen for user score
+    socket.on('getUserScore', function (data) {
+        // get player list
+        let playerList = data.playerList;
+        // get keys from JSON list
+        let playerKeys = Object.keys(playerList);
+        // get length of JSON list
+        let playerListLength = playerKeys.length;
+        // store the element that will display the player list & score
+        let playerScoreContainer: HTMLElement = document.getElementById("playerScoreContainer");
+        // reset player list
+        playerScoreContainer.innerHTML = "";
+        console.log(playerKeys);
+
+        // get player list
+        while (playerListLength--) {
+
+            // create elements to store list
+            let playerListName: HTMLElement = document.createElement("DIV");
+            let playerListScore: HTMLElement = document.createElement("DIV");
+
+            playerListName.innerText = playerKeys[playerListLength];
+            playerListScore.innerText = JSON.stringify(playerList[playerKeys[playerListLength]]);
+
+            playerListScore.style.fontSize = "15px";
+
+            playerScoreContainer.appendChild(playerListName);
+            playerScoreContainer.appendChild(playerListScore);
+
+        }
+    });
+
 }
 
 /* 
@@ -38,7 +75,11 @@ function loadGame() {
     the cell that the content is in, and the user.
 */
 function sendMessage(msg: String, cellIndex: number) {
-    socket.emit('msg', { message: msg, cell: cellIndex, user: socket.id });
+    socket.emit('msg', {
+        message: msg,
+        cell: cellIndex,
+        user: socket.id
+    });
 }
 
 function getPlayerCount() {
@@ -49,12 +90,12 @@ function getPlayerCount() {
     Update the game when receiving server data from the other client
 */
 function updateGame() {
-    
+
     // update board with player selected cells
     socket.on('broadcast', function (data) {
         (<HTMLElement>document.getElementsByClassName("gameCell")[data.cell]).innerText = data.message;
     });
-    
+
     // get player count and start game when 2 players connect
     socket.on('getPlayerCount', function (data) {
         // start game
@@ -70,7 +111,7 @@ function updateGame() {
         console.log(data.playerCount);
     });
 
-    socket.on('gameover', function(data) {
+    socket.on('gameover', function (data) {
         console.log("OK");
         let gameStatus = data.gameStatus;
         console.log("server ID: " + data.player);
@@ -87,25 +128,52 @@ function updateGame() {
         else
             console.log("You lose.");
     });
-
 }
 
 function resetGame() {
-     // get cells
-     let gameCell: HTMLCollection = document.getElementsByClassName("gameCell");
-     // get length to iterate cells
-     let gameCellLength:number = gameCell.length;
+    // get cells
+    let gameCell: HTMLCollection = document.getElementsByClassName("gameCell");
+    // get length to iterate cells
+    let gameCellLength: number = gameCell.length;
 
-     // reset game cell style and contents
-     while(gameCellLength--) {
+    // reset game cell style and contents
+    while (gameCellLength--) {
         (<HTMLElement>gameCell[gameCellLength]).innerText = "";
         (<HTMLElement>gameCell[gameCellLength]).style.backgroundColor = "#FFFFFF";
         (<HTMLElement>gameCell[gameCellLength]).style.cursor = "default";
-     }
+    }
 }
+
+
+function addEventCaptureUserNameInput() {
+    // input and button container
+    let playerNameContainer: HTMLElement = document.getElementById("playerNameContainer");
+    // input element
+    let playerNameInput: HTMLInputElement = document.querySelector("#playerNameInput");
+    // button to send username information
+    let playerNameButton: HTMLElement = document.getElementById("playerNameButton");
+
+    // submit typed player name
+    playerNameButton.addEventListener("mousedown", function () {
+        playerNameContainer.style.display = "none";
+
+        playerName = playerNameInput.value;
+
+        socket.emit('userData', {
+            userName: playerName,
+            userID: playerID
+        });
+
+        socket.emit('getUserScore', function (data) {
+            console.log(data);
+        });
+    });
+}
+
 
 // wait for DOM to load before getting elements
 window.onload = function () {
+    addEventCaptureUserNameInput();
     loadGame();
     updateGame();
     getPlayerCount();
