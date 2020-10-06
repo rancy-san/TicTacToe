@@ -7,8 +7,53 @@ body {
     padding: 0;
 }
 
-/* allow user to see game box */
+/* player */
+#playerNameContainer {
+    position: absolute;
+    display: block;
+    height: 300px;
+    width: 300px;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+    background-color: #EEE;
+    z-index: 2;
+}
 
+#playerNameInput {
+    position: absolute;
+    display: block;
+    width: 200px;
+    left: 0;
+    background-color: white;
+    border: none;
+    outline: none;
+    text-align: center;
+}
+
+#playerNameButton {
+    position: absolute;
+    display: block;
+    width: 100px;
+    right: 0;
+    background-color: #666;
+    color: white;
+    font-size: 20px;
+    text-align: center;
+    cursor: pointer;
+}
+
+#playerNameInput,
+#playerNameButton {
+    height: 25px;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+}
+
+/* allow user to see game box */
 #gameCellContainer {
     position: absolute;
     display: block;
@@ -29,4 +74,5 @@ body {
     width: 98px;
     border: 1px solid black;
     float: left;
+    cursor: pointer;
 }

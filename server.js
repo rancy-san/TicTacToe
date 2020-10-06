@@ -6,6 +6,8 @@ const app = express();
 const http = require('http').Server(app);
 // able to parse POST request from the client
 const bodyParser = require('body-parser')
+// allow broadcast of selection
+var io = require('socket.io')(http);
 
 // eliminate CORS (Cross origin request) issue/non-https
 const cors = require('cors');
@@ -30,14 +32,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/assets', express.static('assets'));
 
 // access '/' (landing page) brings you to index.html 
-app.get('/', function(req, res) {
-	res.sendFile(__dirname +'/index.html');
-    console.log("A user has been sent chat.html");
+app.get('/', function (req, res) {
+	res.sendFile(__dirname + '/index.html');
+	console.log("A user has been sent chat.html");
 });
 
 // access '/index' (landing page) brings you to index.html 
-app.get('/index', function(req, res) {
-	res.sendFile(__dirname +'/chat.html');
+app.get('/index', function (req, res) {
+	res.sendFile(__dirname + '/chat.html');
 	console.log("A user has been sent chat.html");
 });
 
@@ -47,12 +49,43 @@ app.post('/sendMessage', function (req, res) {
 	let userMessage = JSON.stringify(req.body.message);
 	// display user's message in the server console
 	console.log("***** User: " + userMessage);
+
 });
 
+// get number of players on server
+let players = 0;
+io.on('connection', function (socket) {
+	players++;
+	// number of players allowed
+	if (players === 2) {
+		io.sockets.emit('broadcast', {
+			description: players + ' players connected!'
+		});
+		// decrement user count
+		socket.on('disconnect', function () {
+			players--;
+			// clear board
+			if (players < 2) {
+				io.sockets.emit('broadcast', {
+					description: players + ' players connected!'
+				});
+			}
+		});
+		socket.on('msg', function (data) {
+			console.log(data);
+			//Send message to everyone
+			io.sockets.emit('broadcast', data);
+		});
+	}
+});
+
+//io.broadcast.emit('broadcast', 'hello friends!');
+
+
 // create server & listen for connections
-http.listen(3000, function() {
+http.listen(3000, function () {
 	// get IPv4 address to display in the server console
-	localIpV4Address().then(function(ipAddress){
+	localIpV4Address().then(function (ipAddress) {
 		// display IP address of the server
 		console.log("This machine '" + os.hostname() + "' is now a local server!");
 		console.log("Mobile application ready for testing.");
