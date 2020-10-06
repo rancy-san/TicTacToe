@@ -59,6 +59,21 @@ const winCondition = [
 	]
 ];
 
+let player1Game = [
+	0, 0, 0,
+	0, 0, 0,
+	0, 0, 0
+];
+
+let player2Game = [
+	0, 0, 0,
+	0, 0, 0,
+	0, 0, 0
+];
+
+let player1Name = "";
+let player2Name = "";
+
 // allow Cross Origin Requests
 app.use(cors());
 // to support JSON-encoded bodies
@@ -99,17 +114,39 @@ let players = 0;
 io.on('connection', function (socket) {
 	players++;
 
-	// decrement user count
+	// decrement player count, and broadcast the number of players to all clients
 	socket.on('disconnect', function () {
 		players--;
+		// automatically send the player count on user connection if user already connected
+		io.sockets.emit('getPlayerCount', {
+			playerCount: players
+		});
+		if(players < 2) {
+			player1Name = player2Name;
+		}
 	});
+	// set player names when number of players are valid
+	if(players === 1) {
+		console.log("p1 conected");
+		player1Name = socket.id;
+	} else if(players === 2) {
+		console.log("p2 conected");
+		player2Name = socket.id;
+	}
 
-	console.log(players);
-
-	// automatically send the player count on user connection if user already connected
-	io.sockets.emit('getPlayerCount', {
-		playerCount: players
-	});
+	// reset server side game
+	if(players < 2) {
+		player1Game = [
+			0, 0, 0,
+			0, 0, 0,
+			0, 0, 0
+		];
+		player2Game = [
+			0, 0, 0,
+			0, 0, 0,
+			0, 0, 0
+		];
+	}
 
 	// get player count on request
 	socket.on('getPlayerCount', function () {
@@ -118,10 +155,30 @@ io.on('connection', function (socket) {
 		});
 	});
 	
+	// intercept user sending message to server
 	socket.on('msg', function (data) {
 		console.log(data);
+		console.log(player1Name);
+		console.log(player2Name);
+
 		//Send message to everyone
 		io.sockets.emit('broadcast', data);
+		// add marked position to personal game board
+		switch(data.user) {
+			case player1Name: {
+				console.log("player1");
+				player1Game[data.cell] = 1;
+				break;
+			}
+			case player2Name: {
+				console.log("player2");
+				player2Game[data.cell] = 1;
+				break;
+			}
+		}
+
+		console.log(player1Game);
+		console.log(player2Game);
 	});
 });
 
