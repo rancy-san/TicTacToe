@@ -77,7 +77,9 @@ function getPlayerCount() {
 function updateGame() {
     // update board with player selected cells
     socket.on('broadcast', function (data) {
-        document.getElementsByClassName("gameCell")[data.cell].innerText = data.message;
+        //(<HTMLElement>document.getElementsByClassName("gameCell")[data.cell]).innerText = data.message;
+        // use O instead of opponent's X
+        document.getElementsByClassName("gameCell")[data.cell].innerText = "O";
     });
     // get player count and start game when 2 players connect
     socket.on('getPlayerCount', function (data) {
@@ -97,17 +99,26 @@ function updateGame() {
     socket.on('gameover', function (data) {
         console.log("OK");
         var gameStatus = data.gameStatus;
+        var gameStatusText = document.getElementById("gameStatusText");
         console.log("server ID: " + data.player);
         console.log("client ID: " + playerID);
+        var gameCellContainer = document.getElementById("gameCellContainer").style.display = "none";
+        console.log(gameStatus);
         if (gameStatus === "win") {
             if (data.player === playerID) {
-                console.log("You win!");
+                gameStatusText.innerText = "Yes, you won!";
             }
         }
-        else if (gameStatus === "draw")
-            console.log("Draw.");
-        else
-            console.log("You lose.");
+        else if (gameStatus === "draw") {
+            gameStatusText.innerText = "Draw!";
+        }
+        else {
+            gameStatusText.innerText = "No, you lost!";
+        }
+        resetGame();
+    });
+    socket.on('resetGame', function () {
+        resetGame();
     });
 }
 function resetGame() {
@@ -115,7 +126,7 @@ function resetGame() {
     var gameCell = document.getElementsByClassName("gameCell");
     // get length to iterate cells
     var gameCellLength = gameCell.length;
-    // reset game cell style and contents
+    // reset game cell style and contents client side
     while (gameCellLength--) {
         gameCell[gameCellLength].innerText = "";
         gameCell[gameCellLength].style.backgroundColor = "#FFFFFF";
@@ -142,10 +153,20 @@ function addEventCaptureUserNameInput() {
         });
     });
 }
+function addEventReplayGame() {
+    var gameStatusRetryButton = document.getElementById("gameStatusRetryButton");
+    gameStatusRetryButton.addEventListener("mousedown", function () {
+        var gameCellContainer = document.getElementById("gameCellContainer").style.display = "block";
+        var gameStatusText = document.getElementById("gameStatusText").innerText = "Did you win?";
+        console.log("Resetting game please wait...");
+        socket.emit("resetGame");
+    });
+}
 // wait for DOM to load before getting elements
 window.onload = function () {
-    addEventCaptureUserNameInput();
     loadGame();
+    addEventCaptureUserNameInput();
     updateGame();
     getPlayerCount();
+    addEventReplayGame();
 };

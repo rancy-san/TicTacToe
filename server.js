@@ -154,9 +154,7 @@ io.on('connection', function (socket) {
 		// reset server side game
 		if (players < maxPlayers) {
 			player1UserID = player2UserID;
-			player1Game = defaultGame();
-			player2Game = defaultGame();
-			messageCount = 0;
+			resetGame();
 		}
 	});
 	console.log("Player count: " + players);
@@ -167,6 +165,13 @@ io.on('connection', function (socket) {
 	} else if (players === maxPlayers) {
 		player2UserID = socket.id;
 	}
+
+	socket.on('resetGame', function () {
+		console.log("Resetting game...");
+		resetGame();
+
+		io.sockets.emit("resetGame");
+	});
 
 	// get player count on request
 	socket.on('getPlayerCount', function () {
@@ -224,7 +229,7 @@ io.on('connection', function (socket) {
 		*/
 
 		//Send message to everyone
-		io.sockets.emit('broadcast', data);
+		socket.broadcast.emit('broadcast', data);
 		// add marked position to personal game board
 		switch (data.user) {
 			case player1UserID: {
@@ -332,6 +337,16 @@ io.on('connection', function (socket) {
 		}
 	});
 });
+
+
+function resetGame() {
+	player1Game = defaultGame();
+	player2Game = defaultGame();
+	messageCount = 0;
+
+	console.log(player1Game);
+	console.log(player2Game);
+}
 
 function playerScoreStatus() {
 	console.log("Sending player score...");
