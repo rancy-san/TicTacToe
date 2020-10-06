@@ -20,7 +20,7 @@ function loadGame() {
                     // add X or O
                     (<HTMLElement>gameCell[gameCellLength]).innerText = "X";
                     (<HTMLElement>gameCell[gameCellLength]).style.cursor = "default";
-                    (<HTMLElement>gameCell[gameCellLength]).style.backgroundColor = "#F3F3F3";
+                    //(<HTMLElement>gameCell[gameCellLength]).style.backgroundColor = "#F3F3F3";
                     sendMessage((<HTMLElement>gameCell[gameCellLength]).innerText, gameCellLength);
                 }
             });
@@ -75,8 +75,8 @@ function resetGame() {
      // reset game cell style and contents
      while(gameCellLength--) {
         (<HTMLElement>gameCell[gameCellLength]).innerText = "";
-        (<HTMLElement>gameCell[gameCellLength]).style.backgroundColor = "none";
-        (<HTMLElement>gameCell[gameCellLength]).style.cursor = "pointer";
+        (<HTMLElement>gameCell[gameCellLength]).style.backgroundColor = "#FFFFFF";
+        (<HTMLElement>gameCell[gameCellLength]).style.cursor = "default";
      }
 }
 

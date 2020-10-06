@@ -18,7 +18,7 @@ function loadGame() {
                     // add X or O
                     gameCell[gameCellLength].innerText = "X";
                     gameCell[gameCellLength].style.cursor = "default";
-                    gameCell[gameCellLength].style.backgroundColor = "#F3F3F3";
+                    //(<HTMLElement>gameCell[gameCellLength]).style.backgroundColor = "#F3F3F3";
                     sendMessage(gameCell[gameCellLength].innerText, gameCellLength);
                 }
             });
@@ -68,8 +68,8 @@ function resetGame() {
     // reset game cell style and contents
     while (gameCellLength--) {
         gameCell[gameCellLength].innerText = "";
-        gameCell[gameCellLength].style.backgroundColor = "none";
-        gameCell[gameCellLength].style.cursor = "pointer";
+        gameCell[gameCellLength].style.backgroundColor = "#FFFFFF";
+        gameCell[gameCellLength].style.cursor = "default";
     }
 }
 // wait for DOM to load before getting elements
