@@ -195,7 +195,7 @@ io.on('connection', function (socket) {
 		}
 		console.log(player1Game);
 		console.log(player2Game);
-		
+
 		// check if winning state
 		if(messageCount >= minimumWinningMoves) {
 			// used to loop through player's board
@@ -218,14 +218,14 @@ io.on('connection', function (socket) {
 					console.log("Winner: " + winner);
 					// assign and send winners and losers
 					switch (winner) {
-						case player1Game: {
-							gameStatus("win", player1Game);
-							gameStatus("lose", player2Game);
+						case player1Name: {
+							gameStatus("win", player1Name);
+							gameStatus("lose", player2Name);
 							break;
 						}
 						case player2Name: {
-							gameStatus("lose", player1Game);
-							gameStatus("win", player2Game);
+							gameStatus("lose", player1Name);
+							gameStatus("win", player2Name);
 						}
 					}
 					// reset board for next play
@@ -275,13 +275,18 @@ io.on('connection', function (socket) {
 		
 		// check if draw game
 		if (messageCount >= maximumDrawMoves) {
-			gameStatus("draw", player1Game, player2Game);
+			gameStatus("draw", null);
 		}
 	});
 });
 
+/*
+	Send game status to the winner and loser given 
+	the some game status, and a player name to send to.
+*/
 function gameStatus(someGameStatus, somePlayerName) {
-	io.sockets.emit('gameOver', {
+	console.log("Game over. Sending results...");
+	io.to(somePlayerName).emit('gameover', {
 		gameStatus: someGameStatus,
 		player: somePlayerName,
 	});

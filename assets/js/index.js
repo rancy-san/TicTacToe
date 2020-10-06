@@ -3,12 +3,16 @@ var connectionPort = "3000";
 var xhr = new XMLHttpRequest();
 var socket = io.connect(connectionIP + ":" + connectionPort);
 var player = "someUser";
+var playerID;
 /* load and assignment DOM elements */
 function loadGame() {
     // get cells
     var gameCell = document.getElementsByClassName("gameCell");
     // get length to iterate cells
     var gameCellLength = gameCell.length;
+    socket.on('connect', function () {
+        playerID = socket.id;
+    });
     // add event to each cell
     while (gameCellLength--) {
         (function (gameCellLength) {
@@ -18,7 +22,7 @@ function loadGame() {
                     // add X or O
                     gameCell[gameCellLength].innerText = "X";
                     gameCell[gameCellLength].style.cursor = "default";
-                    //(<HTMLElement>gameCell[gameCellLength]).style.backgroundColor = "#F3F3F3";
+                    gameCell[gameCellLength].style.backgroundColor = "#F3F3F3";
                     sendMessage(gameCell[gameCellLength].innerText, gameCellLength);
                 }
             });
@@ -42,7 +46,6 @@ function updateGame() {
     // update board with player selected cells
     socket.on('broadcast', function (data) {
         document.getElementsByClassName("gameCell")[data.cell].innerText = data.message;
-        console.log(socket.id);
     });
     // get player count and start game when 2 players connect
     socket.on('getPlayerCount', function (data) {
@@ -58,6 +61,21 @@ function updateGame() {
             resetGame();
         }
         console.log(data.playerCount);
+    });
+    socket.on('gameover', function (data) {
+        console.log("OK");
+        var gameStatus = data.gameStatus;
+        console.log("server ID: " + data.player);
+        console.log("client ID: " + playerID);
+        if (gameStatus === "win") {
+            if (data.player === playerID) {
+                console.log("You win!");
+            }
+        }
+        else if (gameStatus === "draw")
+            console.log("Draw.");
+        else
+            console.log("You lose.");
     });
 }
 function resetGame() {
