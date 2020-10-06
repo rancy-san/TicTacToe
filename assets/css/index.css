@@ -123,6 +123,15 @@ body {
     background-color: white;
 }
 
+#gameCellContainerBlocker {
+    position: absolute;
+    display: none;
+    height: 100%;
+    width: 100%;
+    z-index: 3;
+
+}
+
 .gameCell {
     position: relative;
     display: inline-block;
@@ -131,4 +140,6 @@ body {
     border: 1px solid black;
     float: left;
     cursor: pointer;
+    font-size: 90px;
+    text-align: center;
 }

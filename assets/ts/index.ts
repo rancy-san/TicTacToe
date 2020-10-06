@@ -1,4 +1,6 @@
 let connectionIP = "localhost";
+// use server's IP running on that machine to play across other devices
+//let connectionIP = "http://192.168.0.19";
 let connectionPort = "3000";
 let xhr = new XMLHttpRequest();
 var socket = io.connect(connectionIP + ":" + connectionPort);
@@ -26,11 +28,17 @@ function loadGame() {
             gameCell[gameCellLength].addEventListener("mousedown", function () {
                 // check if cell has content
                 if (!(<HTMLElement>gameCell[gameCellLength]).innerText) {
+                    
+                    let gameCellContainerBlocker:HTMLElement = document.getElementById("gameCellContainerBlocker");
+
                     // add X or O
                     (<HTMLElement>gameCell[gameCellLength]).innerText = "X";
                     (<HTMLElement>gameCell[gameCellLength]).style.cursor = "default";
                     (<HTMLElement>gameCell[gameCellLength]).style.backgroundColor = "#F3F3F3";
                     sendMessage((<HTMLElement>gameCell[gameCellLength]).innerText, gameCellLength);
+
+                    // disable client side clicking until opponent has made a turn
+                    gameCellContainerBlocker.style.display = "block";
                 }
             });
         })(gameCellLength);
@@ -62,6 +70,7 @@ function loadGame() {
 
             playerListScore.style.fontSize = "15px";
 
+            // all player scores to the scoreboard
             playerScoreContainer.appendChild(playerListName);
             playerScoreContainer.appendChild(playerListScore);
 
@@ -93,9 +102,13 @@ function updateGame() {
 
     // update board with player selected cells
     socket.on('broadcast', function (data) {
+        let gameCellContainerBlocker:HTMLElement = document.getElementById("gameCellContainerBlocker");
         //(<HTMLElement>document.getElementsByClassName("gameCell")[data.cell]).innerText = data.message;
         // use O instead of opponent's X
         (<HTMLElement>document.getElementsByClassName("gameCell")[data.cell]).innerText = "O";
+
+        // allow user to perform move
+        gameCellContainerBlocker.style.display = "none";
     });
 
     // get player count and start game when 2 players connect

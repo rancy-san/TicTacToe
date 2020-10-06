@@ -1,4 +1,6 @@
-var connectionIP = "localhost";
+//let connectionIP = "localhost";
+// use server's IP running on that machine to play across other devices
+var connectionIP = "http://192.168.0.19";
 var connectionPort = "3000";
 var xhr = new XMLHttpRequest();
 var socket = io.connect(connectionIP + ":" + connectionPort);
@@ -22,11 +24,14 @@ function loadGame() {
             gameCell[gameCellLength].addEventListener("mousedown", function () {
                 // check if cell has content
                 if (!gameCell[gameCellLength].innerText) {
+                    var gameCellContainerBlocker = document.getElementById("gameCellContainerBlocker");
                     // add X or O
                     gameCell[gameCellLength].innerText = "X";
                     gameCell[gameCellLength].style.cursor = "default";
                     gameCell[gameCellLength].style.backgroundColor = "#F3F3F3";
                     sendMessage(gameCell[gameCellLength].innerText, gameCellLength);
+                    // disable client side clicking until opponent has made a turn
+                    gameCellContainerBlocker.style.display = "block";
                 }
             });
         })(gameCellLength);
@@ -52,6 +57,7 @@ function loadGame() {
             playerListName.innerText = playerKeys[playerListLength];
             playerListScore.innerText = JSON.stringify(playerList[playerKeys[playerListLength]]);
             playerListScore.style.fontSize = "15px";
+            // all player scores to the scoreboard
             playerScoreContainer.appendChild(playerListName);
             playerScoreContainer.appendChild(playerListScore);
         }
@@ -77,9 +83,12 @@ function getPlayerCount() {
 function updateGame() {
     // update board with player selected cells
     socket.on('broadcast', function (data) {
+        var gameCellContainerBlocker = document.getElementById("gameCellContainerBlocker");
         //(<HTMLElement>document.getElementsByClassName("gameCell")[data.cell]).innerText = data.message;
         // use O instead of opponent's X
         document.getElementsByClassName("gameCell")[data.cell].innerText = "O";
+        // allow user to perform move
+        gameCellContainerBlocker.style.display = "none";
     });
     // get player count and start game when 2 players connect
     socket.on('getPlayerCount', function (data) {
