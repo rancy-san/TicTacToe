@@ -1,6 +1,6 @@
-//let connectionIP = "localhost";
+var connectionIP = "localhost";
 // use server's IP running on that machine to play across other devices
-var connectionIP = "http://192.168.0.19";
+//let connectionIP = "http://192.168.0.19";
 var connectionPort = "3000";
 var xhr = new XMLHttpRequest();
 var socket = io.connect(connectionIP + ":" + connectionPort);
