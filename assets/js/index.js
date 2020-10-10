@@ -238,16 +238,16 @@ function addEventCaptureUserNameInput() {
             // empty error messgage
             errorMessage(null);
             // setTimeout to test userName undefined error on server side
-            setTimeout(function () {
-                console.log(playerName);
-                // send to server username entered, and unique ID associated to username
-                socket.emit('userData', {
-                    userName: playerName,
-                    userID: playerID
-                });
-                // request from the server the current scores of all players
-                socket.emit('getUserScore');
-            }, 1000);
+            // setTimeout(function () {
+            console.log(playerName);
+            // send to server username entered, and unique ID associated to username
+            socket.emit('userData', {
+                userName: playerName,
+                userID: playerID
+            });
+            // request from the server the current scores of all players
+            socket.emit('getUserScore');
+            //}, 1000);
         }
         else {
             // display error message
