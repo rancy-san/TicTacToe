@@ -7,6 +7,21 @@ body {
     padding: 0;
     user-select: none;
 }
+/* error box */
+#error {
+    position: absolute;
+    display: block;
+    height: 50px;
+    width: 300px;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+    top: -350px;
+    text-align: center;
+    font-size: 20px;
+}
 
 /* score */
 #playerScoreWrapper {
