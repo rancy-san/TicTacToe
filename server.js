@@ -24,6 +24,7 @@ playerList[someUserName] = {
 	draw: 0
 };
 */
+
 let playerList = {
 
 }
@@ -196,28 +197,10 @@ io.on('connection', function (socket) {
 
 	// check if the user already exists on submission of player name
 	socket.on('userData', function (data) {
-		let validName = false;
-		try {
-			if (data.userName) {
-				validName = true;
-			} else {
-				io.to(data.userID).emit('error', {
-					error: "userName"
-				});
-			}
-		} catch (e) {
-			console.log(e.message);
-		}
+		let validName = validatePlayerName(data.userName, data.userID);
 
 		if (validName) {
-			// set player names when number of players are valid
-			if (player1UserID == data.userID) {
-				player1UserName = data.userName;
-				console.log("player1UserName: " + player1UserName);
-			} else if (player2UserID == data.userID) {
-				player2UserName = data.userName;
-				console.log("player2UserName: " + player2UserName);
-			}
+			setPlayerName(data.userName, data.userID);
 
 			// if both names are valid (server has stored it), the game can start
 			if (player1UserName && player2UserName) {
@@ -225,7 +208,6 @@ io.on('connection', function (socket) {
 					gameActive: true
 				});
 			}
-
 
 			console.log("Adding user data for: " + data.userName);
 			// store username temporarily
@@ -296,106 +278,147 @@ io.on('connection', function (socket) {
 
 		// check if winning state
 		if (messageCount >= minimumWinningMoves) {
-			// used to loop through player's board
-			let defaultGameLength = defaultGame().length;
-			// used to loop through possible winning boards
-			let winConditionLength = winCondition.length;
-			// match 3 from one of the possible winning boards
-			let winPatternMax = 3;
-			// track current possible winning boards' match
-			let winPatternCountPlayer1 = 0;
-			// track current possible winning boards' match
-			let winPatternCountPlayer2 = 0;
-			// holds the winner of the game
-			let winner;
-
-			// loop through multi dimensional array
-			for (let i = 0; i < winConditionLength; i++) {
-
-				// loop through single array
-				for (let j = 0; j < defaultGameLength; j++) {
-
-					// check if table of winning combinations is valid
-					if ((player1Game[j] === winCondition[i][j]) && (player1Game[j] == winningValue)) {
-						//console.log("player1Game[" + j + "]: " + player1Game[j] + "winCondition[" + i + "][" + j + "]: " + winCondition[i][j]);
-						winPatternCountPlayer1++;
-					}
-					// check if table of winning combinations is valid
-					if ((player2Game[j] === winCondition[i][j]) && (player2Game[j] == winningValue)) {
-						//console.log("player2Game[" + j + "]: " + player2Game[j] + "winCondition[" + i + "][" + j + "]: " + winCondition[i][j]);
-						winPatternCountPlayer2++;
-					}
-					// player won
-					if (winPatternCountPlayer1 === winPatternMax) {
-						console.log("P1 WINS");
-						winner = player1UserID;
-						break;
-					}
-					// player won
-					if (winPatternCountPlayer2 === winPatternMax) {
-						console.log("P2 WINS");
-						winner = player2UserID;
-						break;
-					}
-					// no winners yet
-					else if (j === (defaultGameLength - 1)) {
-						//console.log("NO WINNERS YET.");
-
-						// reset count for next multiarray check
-						winPatternCountPlayer1 = 0;
-						winPatternCountPlayer2 = 0;
-					}
-				}
-
-				// stop checking for winner if one is found
-				if (winner) {
-					console.log("Winner: " + winner);
-					// assign and send winners and losers
-					switch (winner) {
-						case player1UserID: {
-							// increment player1's score
-							playerList[playerMatch[player1UserID].userName].wins++;
-							// decrease player2's score
-							playerList[playerMatch[player2UserID].userName].loss++;
-
-							// send game status to player 1 and player 2
-							gameStatus("win", player1UserID);
-							gameStatus("lose", player2UserID);
-							break;
-						}
-						case player2UserID: {
-							// decrease player1's score
-							playerList[playerMatch[player1UserID].userName].loss++;
-							// increment player2's score
-							playerList[playerMatch[player2UserID].userName].wins++;
-
-							// send game status to player 1 and player 2
-							gameStatus("lose", player1UserID);
-							gameStatus("win", player2UserID);
-						}
-					}
-
-					// reset board for next play
-					messageCount = 0;
-					player1Game = defaultGame();
-					player2Game = defaultGame();
-					break;
-				}
-			}
+			// loop through winning combinations
+			determineGameStatus();
 		}
 		// check if draw game (draw end at the end of 9 total moves)
 		if (messageCount >= maximumDrawMoves) {
-			console.log("DRAW GAME");
-			// increase draw score for player 1 and 2
-			playerList[playerMatch[player1UserID].userName].draw++;
-			playerList[playerMatch[player2UserID].userName].draw++;
-
-			// send game status to player 1 and player 2
-			gameStatus("draw", player1UserID);
-			gameStatus("draw", player2UserID);
+			checkDraw();
 		}
 	});
 });
+
+function setPlayerName(someUserName, someUserID) {
+	// set player names when number of players are valid
+	if (player1UserID == someUserID) {
+		player1UserName = someUserName;
+		console.log("player1UserName: " + player1UserName);
+	} else if (player2UserID == someUserID) {
+		player2UserName = someUserName;
+		console.log("player2UserName: " + player2UserName);
+	}
+}
+
+function validatePlayerName(someUserName, someUserID) {
+	// check if username is undefined
+	try {
+		if (someUserName) {
+			return true;
+		} else {
+			// return to client with undefined user name message to set their username
+			io.to(someUserID).emit('error', {
+				error: "userName"
+			});
+			return false;
+		}
+	} catch (e) {
+		console.log(e.message);
+	}
+}
+
+/* Loop through players' game board trying to match winning combinations */
+function determineGameStatus() {
+	// used to loop through player's board
+	let defaultGameLength = defaultGame().length;
+	// used to loop through possible winning boards
+	let winConditionLength = winCondition.length;
+	// match 3 from one of the possible winning boards
+	let winPatternMax = 3;
+	// track current possible winning boards' match
+	let winPatternCountPlayer1 = 0;
+	// track current possible winning boards' match
+	let winPatternCountPlayer2 = 0;
+	// holds the winner of the game
+	let winner;
+
+	// loop through multi dimensional array
+	for (let i = 0; i < winConditionLength; i++) {
+
+		// loop through single array
+		for (let j = 0; j < defaultGameLength; j++) {
+
+			// check if table of winning combinations is valid
+			if ((player1Game[j] === winCondition[i][j]) && (player1Game[j] == winningValue)) {
+				//console.log("player1Game[" + j + "]: " + player1Game[j] + "winCondition[" + i + "][" + j + "]: " + winCondition[i][j]);
+				winPatternCountPlayer1++;
+			}
+			// check if table of winning combinations is valid
+			if ((player2Game[j] === winCondition[i][j]) && (player2Game[j] == winningValue)) {
+				//console.log("player2Game[" + j + "]: " + player2Game[j] + "winCondition[" + i + "][" + j + "]: " + winCondition[i][j]);
+				winPatternCountPlayer2++;
+			}
+			// player won
+			if (winPatternCountPlayer1 === winPatternMax) {
+				console.log("P1 WINS");
+				winner = player1UserID;
+				break;
+			}
+			// player won
+			if (winPatternCountPlayer2 === winPatternMax) {
+				console.log("P2 WINS");
+				winner = player2UserID;
+				break;
+			}
+			// no winners yet
+			else if (j === (defaultGameLength - 1)) {
+				//console.log("NO WINNERS YET.");
+
+				// reset count for next multiarray check
+				winPatternCountPlayer1 = 0;
+				winPatternCountPlayer2 = 0;
+			}
+		}
+		if (winner) {
+			// stop checking for winner if one is found
+			checkWinner(winner);
+			break;
+		}
+	}
+}
+
+function checkWinner(winner) {
+	console.log("Winner: " + winner);
+	// assign and send winners and losers
+	switch (winner) {
+		case player1UserID: {
+			// increment player1's score
+			playerList[playerMatch[player1UserID].userName].wins++;
+			// decrease player2's score
+			playerList[playerMatch[player2UserID].userName].loss++;
+
+			// send game status to player 1 and player 2
+			gameStatus("win", player1UserID);
+			gameStatus("lose", player2UserID);
+			break;
+		}
+		case player2UserID: {
+			// decrease player1's score
+			playerList[playerMatch[player1UserID].userName].loss++;
+			// increment player2's score
+			playerList[playerMatch[player2UserID].userName].wins++;
+
+			// send game status to player 1 and player 2
+			gameStatus("lose", player1UserID);
+			gameStatus("win", player2UserID);
+		}
+	}
+
+	// reset board for next play
+	messageCount = 0;
+	player1Game = defaultGame();
+	player2Game = defaultGame();
+}
+
+function checkDraw() {
+	console.log("DRAW GAME");
+	// increase draw score for player 1 and 2
+	playerList[playerMatch[player1UserID].userName].draw++;
+	playerList[playerMatch[player2UserID].userName].draw++;
+
+	// send game status to player 1 and player 2
+	gameStatus("draw", player1UserID);
+	gameStatus("draw", player2UserID);
+}
 
 
 /*

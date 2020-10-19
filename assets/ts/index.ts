@@ -163,15 +163,18 @@ function updateGame() {
             // if the current player is the winner, change text to the winning text
             if (data.player === playerID) {
                 gameStatusText.innerText = "Yes, you won!";
+                gameStatusText.style.color = "Green";
             }
         }
         // drawing a game does not require a unique userID to identify who won
         else if (gameStatus === "draw") {
             gameStatusText.innerText = "Draw!";
+            gameStatusText.style.color = "Orange";
         }
         // otherwise the current player lost
         else {
             gameStatusText.innerText = "No, you lost!";
+            gameStatusText.style.color = "Red";
         }
         // clear game board
         resetGame();
@@ -258,15 +261,16 @@ function addEventCaptureUserNameInput() {
 
     // submit typed player name
     playerNameButton.addEventListener("mousedown", function () {
+        // trim empty space, and make sure it is not an emty string
+        let tempUserName: String = playerNameInput.value.trim();
+
         // check username has been initialized before sending it to the server
-        if (playerName != undefined) {
-            // trim empty space, and make sure it is not an emty string
-            let tempUserName: String = playerNameInput.value.trim();
+        if (tempUserName != undefined) {
 
             // make sure it is not empty, otherwise default username is used
             if (tempUserName != "")
                 playerName = tempUserName;
-
+                
             // hide user name input
             playerNameContainer.style.display = "none";
             // empty error messgage
@@ -307,7 +311,10 @@ function addEventReplayGame() {
         // show the game board to have the players interact with it again
         let gameCellContainer = document.getElementById("gameCellContainer").style.display = "block";
         // reset Win/Loss/Draw message
-        let gameStatusText = document.getElementById("gameStatusText").innerText = "Did you win?";
+        let gameStatusText: HTMLElement = document.getElementById("gameStatusText");
+        
+        gameStatusText.innerText = "Did you win?";
+        gameStatusText.style.color = "Black";
 
         console.log("Resetting game please wait...");
         // tell the server that the client wants to reset the game
